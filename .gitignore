@@ -1,2 +1,7 @@
 */target/*
 *.iml
+*.xml
+*/*.xml
+.idea
+target
+.idea/*
