@@ -29,7 +29,6 @@
             <artifactId>miglayout</artifactId>
             <version>3.6.3</version>
         </dependency>
-
     </dependencies>
 
 </project>

@@ -2,6 +2,6 @@
 *.iml
 *.xml
 */*.xml
-.idea
+.idea/
 target
 .idea/*
