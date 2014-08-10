@@ -1,7 +1,6 @@
 package edu.osten
 
 import com.google.common.io.Files
-import com.sun.prism.paint.Color
 import javafx.application.Application
 import javafx.application.Platform
 import javafx.beans.value.ChangeListener
@@ -36,9 +35,10 @@ class SwingTesterApplication extends Application{
             '''
                 import groovy.swing.SwingBuilder
                 import net.miginfocom.swing.MigLayout
-                import edu.osten.Buildable
                 import javax.swing.*
                 import java.awt.*
+                import static java.awt.Color.*
+
         '''
 
     String exampleCode = '''
@@ -99,8 +99,13 @@ def JComponent build(){
                         JLabel errorPanel = new JLabel(text: 'There\'s a disturbance in your groovy')
                         errorPanel.setForeground(RED)
                         swingNode.content = errorPanel
-                        errorPanel.revalidate()
-                        errorPanel.repaint()
+                        SwingUtilities.invokeLater( new Runnable() {
+                            @Override
+                            public void run(){
+                                errorPanel.revalidate ( )
+                                errorPanel.repaint ( )
+                            }
+                        })
                         return;
                     }
                     Platform.runLater( new Runnable() {
@@ -130,7 +135,7 @@ def JComponent build(){
             }
         } )
         codeArea.text = exampleCode
-        Scene scene = new Scene( hbox, 800, 500 )
+        Scene scene = new Scene( hbox, 1000, 500 )
         stage.setScene(scene)
         stage.show()
     }
