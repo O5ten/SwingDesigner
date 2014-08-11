@@ -6,20 +6,17 @@ import javafx.application.Platform
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.embed.swing.SwingNode
-import javafx.geometry.Pos
 import javafx.scene.Scene
-import javafx.scene.control.Separator
-import javafx.scene.control.SplitPane
 import javafx.scene.control.TextArea
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.HBox
-import javafx.scene.layout.StackPane
-import javafx.scene.layout.VBox
 import javafx.stage.Stage
 import org.codehaus.groovy.control.MultipleCompilationErrorsException
-import javax.swing.JComponent
+import org.fxmisc.richtext.CodeArea
+import org.fxmisc.richtext.LineNumberFactory
+import org.fxmisc.richtext.StyleClassedTextArea
+
 import javax.swing.JLabel
-import javax.swing.JPanel
 import javax.swing.SwingUtilities
 
 import static com.google.common.base.Charsets.UTF_8
@@ -29,7 +26,7 @@ import static java.io.File.*
 
 import static javafx.scene.layout.AnchorPane.*
 
-class SwingTesterApplication extends Application{
+class SwingDesignerApp extends Application {
 
     String basicImports =
             '''
@@ -50,16 +47,18 @@ def JComponent build(){
     }
 }'''
 
-    File scriptFile = createTempFile( "script", ".groovy" );
+    File scriptFile = createTempFile("script", ".groovy");
 
     @Override
     void start(Stage stage) throws Exception {
 
         SwingNode swingNode = new SwingNode()
-        swingNode.content = new JLabel( text: 'No groovy code has been added yet')
+        swingNode.content = new JLabel(text: 'No groovy code has been added yet')
 
-        TextArea codeArea = new TextArea()
-        codeArea.text = ''
+        CodeArea codeArea = new CodeArea()
+        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
+
+        codeArea.replaceText ''
 
         AnchorPane leftPane = new AnchorPane()
         leftPane.minWidth = 500
@@ -74,7 +73,7 @@ def JComponent build(){
         AnchorPane rightPane = new AnchorPane()
         rightPane.minWidth = 300
         rightPane.minHeight = 500
-        HBox hbox = new HBox( leftPane, rightPane )
+        HBox hbox = new HBox(leftPane, rightPane)
         leftPane.children.add swingNode
 
         setTopAnchor(codeArea, 0.0)
@@ -83,10 +82,9 @@ def JComponent build(){
 
         rightPane.children.add codeArea
 
-        codeArea.textProperty().addListener( new ChangeListener<String>(){
+        codeArea.textProperty().addListener(new ChangeListener<String>() {
             @Override
-            public void changed( ObservableValue<? extends String> arg0, String arg1, String newScript )
-            {
+            public void changed(ObservableValue<? extends String> arg0, String arg1, String newScript) {
                 try {
                     write(basicImports + newScript, scriptFile, UTF_8);
                     ClassLoader parent = getClass().getClassLoader();
@@ -95,23 +93,23 @@ def JComponent build(){
                     try {
                         def groovyClass = loader.parseClass(scriptFile);
                         buildable = groovyClass.newInstance();
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         JLabel errorPanel = new JLabel(text: 'There\'s a disturbance in your groovy')
                         errorPanel.setForeground(RED)
                         swingNode.content = errorPanel
-                        SwingUtilities.invokeLater( new Runnable() {
+                        SwingUtilities.invokeLater(new Runnable() {
                             @Override
-                            public void run(){
-                                errorPanel.revalidate ( )
-                                errorPanel.repaint ( )
+                            public void run() {
+                                errorPanel.revalidate()
+                                errorPanel.repaint()
                             }
                         })
                         return;
                     }
-                    Platform.runLater( new Runnable() {
+                    Platform.runLater(new Runnable() {
                         @Override
                         public void run() {
-                            SwingUtilities.invokeLater( new Runnable(){
+                            SwingUtilities.invokeLater(new Runnable() {
                                 @Override
                                 void run() {
                                     try {
@@ -128,17 +126,16 @@ def JComponent build(){
                         }
                     });
                 }
-                catch( InstantiationException | IllegalAccessException | IOException e )
-                {
+                catch (InstantiationException | IllegalAccessException | IOException e) {
                     return;
                 }
             }
-        } )
-        codeArea.text = exampleCode
-        Scene scene = new Scene( hbox, 1000, 500 )
+        })
+        codeArea.replaceText exampleCode
+        Scene scene = new Scene(hbox, 1000, 500)
         stage.setScene(scene)
         stage.show()
     }
 }
 
-Application.launch(SwingTesterApplication.class, args);
+Application.launch(SwingDesignerApp.class, args);
