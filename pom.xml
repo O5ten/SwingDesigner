@@ -6,7 +6,20 @@
 
     <groupId>edu.osten</groupId>
     <artifactId>SwingDesigner</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
+    <licenses>
+        <license>
+            <name>GPLv2 with the Classpath Exception</name>
+            <url>http://www.gnu.org/software/classpath/license.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Mikael Östberg</name>
+        </developer>
+    </developers>
 
     <dependencies>
         <dependency>
@@ -32,7 +45,7 @@
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>
-            <version>0.4.1</version>
+            <version>0.4.2</version>
         </dependency>
     </dependencies>
 </project>
