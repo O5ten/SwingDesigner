@@ -1,5 +1,6 @@
 package edu.osten.ui
 
+import com.google.common.io.Files
 import edu.osten.engine.GroovyCompiler
 import edu.osten.engine.ScriptWriter
 import javafx.application.Application
@@ -7,10 +8,18 @@ import javafx.beans.binding.Bindings
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.embed.swing.SwingNode
+import javafx.event.ActionEvent
+import javafx.event.EventHandler
+import javafx.geometry.Orientation
 import javafx.scene.Scene
+import javafx.scene.control.Button
+import javafx.scene.control.SplitPane
+import javafx.scene.control.Tab
+import javafx.scene.control.TabPane
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
+import javafx.scene.layout.VBox
 import javafx.stage.Stage
 import org.fxmisc.richtext.CodeArea
 import org.fxmisc.richtext.LineNumberFactory
@@ -20,6 +29,8 @@ import java.awt.Color
 
 import static edu.osten.ui.UISupport.computeHighlighting
 import static javafx.application.Platform.*
+import static javafx.geometry.Orientation.*
+import static javafx.scene.control.TabPane.TabClosingPolicy.*
 import static javax.swing.SwingUtilities.*
 
 class SwingDesigner extends Application {
@@ -28,7 +39,7 @@ class SwingDesigner extends Application {
     private ScriptWriter scriptWriter
     private CodeArea codeArea
 
-   SwingDesigner( ){
+    SwingDesigner( ){
         this.groovyCompiler = new GroovyCompiler()
         this.scriptWriter = new ScriptWriter()
     }
@@ -41,7 +52,7 @@ class SwingDesigner extends Application {
 
         codeArea = new CodeArea()
         codeArea.replaceText ''
-        codeArea.setParagraphGraphicFactory LineNumberFactory.get(codeArea)
+        codeArea.paragraphGraphicFactory = LineNumberFactory.get(codeArea)
 
         AnchorPane leftPane = new AnchorPane()
         AnchorPane.setTopAnchor swingNode, 0.0
@@ -50,18 +61,56 @@ class SwingDesigner extends Application {
         AnchorPane.setBottomAnchor swingNode, 0.0
 
         AnchorPane rightPane = new AnchorPane()
-        rightPane.minWidth = 500
-        rightPane.maxWidth = 800
-        AnchorPane.setTopAnchor codeArea, 0.0
-        AnchorPane.setRightAnchor codeArea, 0.0
-        AnchorPane.setBottomAnchor codeArea, 0.0
-        AnchorPane.setLeftAnchor codeArea, 0.0
 
-        HBox hbox = new HBox(leftPane, rightPane)
-        HBox.setHgrow rightPane, Priority.NEVER
-        HBox.setHgrow leftPane, Priority.ALWAYS
+        TabPane tabPane = new TabPane()
+        tabPane.tabClosingPolicy = UNAVAILABLE
+
+        Tab codeTab = new Tab('Groovy Editor')
+        codeTab.content = codeArea
+
+        Tab exampleTab = new Tab('Examples')
+        VBox exampleBox = new VBox()
+        exampleBox.setStyle('-fx-padding: 8; -fx-spacing: 8; -fx-alignment: top-center;')
+        Button clickables = new Button('Clickable Buttons')
+        clickables.onAction = new EventHandler<ActionEvent>() {
+            @Override
+            void handle(ActionEvent actionEvent) {
+                setExample('/examples/button.txt')
+            }
+        }
+
+        Button gradients = new Button('Gradient Panels')
+        gradients.onAction = new EventHandler<ActionEvent>() {
+            @Override
+            void handle(ActionEvent actionEvent) {
+                setExample('/examples/gradient.txt')
+            }
+        }
+
+        Button sweden = new Button('Swedish Flag')
+        sweden.onAction = new EventHandler<ActionEvent>() {
+            @Override
+            void handle(ActionEvent actionEvent) {
+                setExample('/examples/sweden.txt')
+            }
+        }
+
+        exampleBox.children.addAll clickables, gradients, sweden
+        exampleTab.content = exampleBox
+
+        tabPane.getTabs().addAll(codeTab, exampleTab)
+
+        AnchorPane.setTopAnchor tabPane, 0.0
+        AnchorPane.setRightAnchor tabPane, 0.0
+        AnchorPane.setBottomAnchor tabPane, 0.0
+        AnchorPane.setLeftAnchor tabPane, 0.0
+
+        SplitPane split = new SplitPane()
+        split.getItems().addAll(leftPane, rightPane)
+        split.orientation = Orientation.HORIZONTAL
+
         leftPane.children.add swingNode
-        rightPane.children.add codeArea
+        rightPane.children.add tabPane
 
         def inCaseOfErrorCallback = {
             JLabel errorPanel = new JLabel(text: 'Your groovy has trouble compiling')
@@ -99,14 +148,18 @@ class SwingDesigner extends Application {
                 }
             }
         })
-        Scene scene = new Scene(hbox, 1250, 500)
+        Scene scene = new Scene(split, 800, 600)
         scene.stylesheets.add SwingDesigner.class.getResource('/style.css').toExternalForm()
         stage.scene = scene
         stage.title = 'Swing Designer'
         stage.show()
     }
 
-    public void setExample(String exampleCode) {
-        codeArea.replaceText exampleCode
+    public void setExample(String resourcePath) {
+        String code = ''
+        Files.getResourceAsStream(resourcePath).readLines().each {
+            code += it + '\n'
+        };
+        codeArea.replaceText code
     }
 }
