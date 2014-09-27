@@ -40,7 +40,6 @@ class SwingDesigner extends Application {
         swingNode.content = new JLabel(text: 'No groovy code has been added yet')
 
         codeArea = new CodeArea()
-        Bindings.bindBidirectional()
         codeArea.replaceText ''
         codeArea.setParagraphGraphicFactory LineNumberFactory.get(codeArea)
 
