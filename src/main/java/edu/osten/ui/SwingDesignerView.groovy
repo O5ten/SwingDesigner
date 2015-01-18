@@ -4,7 +4,6 @@ import com.google.common.io.Files
 import edu.osten.engine.GroovyCompiler
 import edu.osten.engine.ScriptWriter
 import javafx.application.Application
-import javafx.beans.binding.Bindings
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.embed.swing.SwingNode
@@ -17,29 +16,30 @@ import javafx.scene.control.SplitPane
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
 import javafx.scene.layout.AnchorPane
-import javafx.scene.layout.HBox
-import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
+import net.miginfocom.swing.MigLayout
 import org.fxmisc.richtext.CodeArea
 import org.fxmisc.richtext.LineNumberFactory
 
 import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JTextArea
 import java.awt.Color
 
-import static edu.osten.ui.UISupport.computeHighlighting
+import static edu.osten.ui.UISupport.computeAllHighlighting
 import static javafx.application.Platform.*
-import static javafx.geometry.Orientation.*
 import static javafx.scene.control.TabPane.TabClosingPolicy.*
 import static javax.swing.SwingUtilities.*
 
-class SwingDesigner extends Application {
+class SwingDesignerView extends Application {
 
     private GroovyCompiler groovyCompiler
     private ScriptWriter scriptWriter
     private CodeArea codeArea
+    private JTextArea textArea = new JTextArea(lineWrap: true, wrapStyleWord: true)
 
-    SwingDesigner( ){
+    SwingDesignerView( ){
         this.groovyCompiler = new GroovyCompiler()
         this.scriptWriter = new ScriptWriter()
     }
@@ -98,7 +98,7 @@ class SwingDesigner extends Application {
         exampleBox.children.addAll clickables, gradients, sweden
         exampleTab.content = exampleBox
 
-        tabPane.getTabs().addAll(codeTab, exampleTab)
+        tabPane.getTabs().addAll codeTab, exampleTab
 
         AnchorPane.setTopAnchor tabPane, 0.0
         AnchorPane.setRightAnchor tabPane, 0.0
@@ -113,12 +113,17 @@ class SwingDesigner extends Application {
         rightPane.children.add tabPane
 
         def inCaseOfErrorCallback = {
-            JLabel errorPanel = new JLabel(text: 'Your groovy has trouble compiling')
-            errorPanel.foreground = Color.RED
-            swingNode.content = errorPanel
+            JPanel panel = new JPanel(new MigLayout('wrap','0[grow, fill]0','0[]0[grow,fill]push'))
+            panel.add new JLabel(text: 'Your groovy has trouble compiling').with{
+                it.foreground = Color.RED
+                it
+            }
+            panel.add textArea
+
+            swingNode.content = panel
             invokeLater({
-                    errorPanel.revalidate()
-                    errorPanel.repaint()
+                    panel.revalidate()
+                    panel.repaint()
             })
         }
 
@@ -129,7 +134,7 @@ class SwingDesigner extends Application {
                     File file = scriptWriter.write(newScript)
                     def buildable = groovyCompiler.compile(file, inCaseOfErrorCallback)
                     runLater({
-                        codeArea.setStyleSpans 0, computeHighlighting(newScript)
+                        codeArea.setStyleSpans 0, computeAllHighlighting(newScript)
                         invokeLater({
                             try{
                                 def component = buildable.main()
@@ -137,19 +142,21 @@ class SwingDesigner extends Application {
                                 component.revalidate()
                                 component.repaint()
                             }catch(any){
+                                textArea.text = any.message
                                 inCaseOfErrorCallback.call()
                             }
                         })
                     })
                 }
                 catch (any) {
+                    textArea.text = any.message
                     inCaseOfErrorCallback.call()
                     return
                 }
             }
         })
         Scene scene = new Scene(split, 800, 600)
-        scene.stylesheets.add SwingDesigner.class.getResource('/style.css').toExternalForm()
+        scene.stylesheets.add SwingDesignerView.class.getResource('/style.css').toExternalForm()
         stage.scene = scene
         stage.title = 'Swing Designer'
         stage.show()

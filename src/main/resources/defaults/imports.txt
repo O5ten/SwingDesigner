@@ -1,4 +1,4 @@
-import groovy.swing.SwingBuilder
+import groovy.swing.*
 import net.miginfocom.swing.MigLayout
 import javax.swing.*
 import java.awt.*

@@ -2,3 +2,8 @@
     -fx-fill: brown;
     -fx-font-weight: bold;
 }
+
+.single-quotes-string {
+    -fx-fill: green;
+    -fx-font-weight: bold;
+}
