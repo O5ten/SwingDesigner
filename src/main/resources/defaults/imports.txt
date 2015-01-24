@@ -1,3 +1,4 @@
+import groovy.beans.Bindable
 import groovy.swing.*
 import net.miginfocom.swing.MigLayout
 import javax.swing.*

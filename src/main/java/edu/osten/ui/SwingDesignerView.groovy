@@ -1,6 +1,6 @@
 package edu.osten.ui
 
-import com.google.common.io.Files
+import com.google.common.collect.Lists
 import edu.osten.engine.GroovyCompiler
 import edu.osten.engine.ScriptWriter
 import javafx.application.Application
@@ -12,6 +12,7 @@ import javafx.event.EventHandler
 import javafx.geometry.Orientation
 import javafx.scene.Scene
 import javafx.scene.control.Button
+import javafx.scene.control.Control
 import javafx.scene.control.SplitPane
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
@@ -70,32 +71,21 @@ class SwingDesignerView extends Application {
 
         Tab exampleTab = new Tab('Examples')
         VBox exampleBox = new VBox()
-        exampleBox.setStyle('-fx-padding: 8; -fx-spacing: 8; -fx-alignment: top-center;')
-        Button clickables = new Button('Clickable Buttons')
-        clickables.onAction = new EventHandler<ActionEvent>() {
-            @Override
-            void handle(ActionEvent actionEvent) {
-                setExample('/examples/button.txt')
-            }
-        }
+        exampleBox.getStyleClass().add('example-box')
 
-        Button gradients = new Button('Gradient Panels')
-        gradients.onAction = new EventHandler<ActionEvent>() {
-            @Override
-            void handle(ActionEvent actionEvent) {
-                setExample('/examples/gradient.txt')
+        List<Control> examples = Lists.newArrayList();
+        for(File example : new File('./target/classes/examples/').listFiles()){
+            final String aPath = example.path
+            def button = new Button(example.name.replace('_',' ').split('\\.')[0]);
+            button.onAction = new EventHandler<ActionEvent>() {
+                @Override
+                void handle(ActionEvent actionEvent) {
+                    setExample aPath
+                }
             }
+            examples.add button
         }
-
-        Button sweden = new Button('Swedish Flag')
-        sweden.onAction = new EventHandler<ActionEvent>() {
-            @Override
-            void handle(ActionEvent actionEvent) {
-                setExample('/examples/sweden.txt')
-            }
-        }
-
-        exampleBox.children.addAll clickables, gradients, sweden
+        exampleBox.children.addAll examples
         exampleTab.content = exampleBox
 
         tabPane.getTabs().addAll codeTab, exampleTab
@@ -162,9 +152,9 @@ class SwingDesignerView extends Application {
         stage.show()
     }
 
-    public void setExample(String resourcePath) {
+    public void setExample(String path) {
         String code = ''
-        Files.getResourceAsStream(resourcePath).readLines().each {
+        new File(path).readLines().each {
             code += it + '\n'
         };
         codeArea.replaceText code
