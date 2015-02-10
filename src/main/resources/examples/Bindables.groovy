@@ -10,9 +10,9 @@ def main(){
                     c = label()
                 }
                 button text: 'Show Color', constraints: 'span 3', actionPerformed: {
-                    pnl.background = new Color(bindable.r, bindable.g, bindable.b);
-                    a.text = '<HTML><FONT COLOR="#FF0000" SIZE="9">Red'  + bindable.r;
-                    b.text = '<HTML><FONT COLOR="#00FF00" SIZE="9">Green ' + bindable.g;
+                    pnl.background = new Color(bindable.r, bindable.g, bindable.b)
+                    a.text = '<HTML><FONT COLOR="#FF0000" SIZE="9">Red'  + bindable.r
+                    b.text = '<HTML><FONT COLOR="#00FF00" SIZE="9">Green ' + bindable.g
                     c.text = '<HTML><FONT COLOR="#0000FF" SIZE="9">Blue ' + bindable.b
                 }
                 label text: bind { '<HTML><FONT COLOR="#FF0000" SIZE="9">Red ' + bindable.r }

@@ -22,6 +22,7 @@ import javafx.stage.Stage
 import net.miginfocom.swing.MigLayout
 import org.fxmisc.richtext.CodeArea
 import org.fxmisc.richtext.LineNumberFactory
+import org.fxmisc.richtext.StyleSpans
 
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -124,7 +125,10 @@ class SwingDesignerView extends Application {
                     File file = scriptWriter.write(newScript)
                     def buildable = groovyCompiler.compile(file, inCaseOfErrorCallback)
                     runLater({
-                        codeArea.setStyleSpans 0, computeAllHighlighting(newScript)
+                        StyleSpans<Collection<String>> spans = computeAllHighlighting(newScript)
+                        if(spans) {
+                            codeArea.setStyleSpans 0, computeAllHighlighting(newScript)
+                        }
                         invokeLater({
                             try{
                                 def component = buildable.main()
