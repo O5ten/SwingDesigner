@@ -32,18 +32,18 @@ import static javafx.application.Platform.runLater
 import static javafx.scene.control.TabPane.TabClosingPolicy.UNAVAILABLE
 import static javax.swing.SwingUtilities.invokeLater
 
-class SwingDesignerCodeView extends Application {
+class DevelopmentView extends Application {
 
     private GroovyCompiler groovyCompiler
     private ScriptWriter scriptWriter
     private CodeArea codeArea
     private JTextArea textArea = new JTextArea(lineWrap: true, wrapStyleWord: true)
-    private SwingDesignerResultView resultView
+    private ResultView resultView
 
-    SwingDesignerCodeView() {
+    DevelopmentView() {
         this.groovyCompiler = new GroovyCompiler()
         this.scriptWriter = new ScriptWriter()
-        this.resultView = new SwingDesignerResultView()
+        this.resultView = new ResultView()
     }
 
     @Override
@@ -163,7 +163,7 @@ class SwingDesignerCodeView extends Application {
             }
         })
         Scene scene = new Scene(rightPane, 800, 600)
-        scene.stylesheets.add SwingDesignerCodeView.class.getResource('/style.css').toExternalForm()
+        scene.stylesheets.add DevelopmentView.class.getResource('/style.css').toExternalForm()
         stage.scene = scene
         stage.title = 'Swing Designer'
         stage.show()

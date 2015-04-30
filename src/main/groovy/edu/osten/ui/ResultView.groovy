@@ -7,11 +7,11 @@ import javafx.stage.Stage
 
 import javax.swing.JLabel
 
-class SwingDesignerResultView extends Stage {
+class ResultView extends Stage {
 
     private SwingNode swingNode;
 
-    SwingDesignerResultView() {
+    ResultView() {
         swingNode = new SwingNode()
         swingNode.content = new JLabel(text: 'No groovy code has been added yet')
 
@@ -24,7 +24,7 @@ class SwingDesignerResultView extends Stage {
         mainPanel.children.add swingNode
 
         Scene scene = new Scene(mainPanel, 800, 600)
-        scene.stylesheets.add SwingDesignerResultView.class.getResource('/style.css').toExternalForm()
+        scene.stylesheets.add ResultView.class.getResource('/style.css').toExternalForm()
         this.scene = scene
         this.title = 'Swing Designer'
     }

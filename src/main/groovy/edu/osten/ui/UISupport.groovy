@@ -1,13 +1,14 @@
-package edu.osten.ui;
+package edu.osten.ui
 
-import org.fxmisc.richtext.StyleSpans;
-import org.fxmisc.richtext.StyleSpansBuilder;
+import org.fxmisc.richtext.StyleSpans
+import org.fxmisc.richtext.StyleSpansBuilder
 
-import java.util.regex.Matcher;
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-import static java.lang.String.*
-import static java.util.Collections.*;
+import static java.lang.String.join
+import static java.util.Collections.emptyList
+import static java.util.Collections.singleton;
 
 public class UISupport {
 
@@ -23,31 +24,31 @@ public class UISupport {
             "switch", "synchronized", "this", "throw", "throws",
             "transient", "try", "void", "volatile", "while"]
 
-    static final Pattern KEYWORD_PATTERN = Pattern.compile("\\b(" + join("|", KEYWORDS)  + ")\\b")
+    static final Pattern KEYWORD_PATTERN = Pattern.compile("\\b(" + join("|", KEYWORDS) + ")\\b")
     static final Pattern SINGLE_STRING_PATTERN = Pattern.compile('(\'|\")([^(\'|\")\\r\\n]*)?(\'|\")')
 
     static StyleSpans<Collection<String>> computeKeywordHighlighting(String text) {
-       computeHighlighting (['keyword': KEYWORD_PATTERN], text)
+        computeHighlighting(['keyword': KEYWORD_PATTERN], text)
     }
 
     static StyleSpans<Collection<String>> computeSingleQuoteStringHighlighting(String text) {
-        computeHighlighting (['single-quotes-string': SINGLE_STRING_PATTERN], text)
+        computeHighlighting(['single-quotes-string': SINGLE_STRING_PATTERN], text)
     }
 
-    static StyleSpans<Collection<String>> computeAllHighlighting(String text){
-        computeHighlighting (['single-quotes-string': SINGLE_STRING_PATTERN, 'keyword': KEYWORD_PATTERN], text)
+    static StyleSpans<Collection<String>> computeAllHighlighting(String text) {
+        computeHighlighting(['single-quotes-string': SINGLE_STRING_PATTERN, 'keyword': KEYWORD_PATTERN], text)
     }
 
-    static StyleSpans<Collection<String>> computeHighlighting( Map<String, Pattern> patterns, String text ){
-        try{
+    static StyleSpans<Collection<String>> computeHighlighting(Map<String, Pattern> patterns, String text) {
+        try {
             StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>()
-            List<MapEntry<String, Matcher>> matchers = patterns.collect(){ String k, Pattern p -> return p.matcher(text).find() ? new MapEntry(k, p.matcher(text)) : null}
+            List<MapEntry<String, Matcher>> matchers = patterns.collect() { String k, Pattern p -> return p.matcher(text).find() ? new MapEntry(k, p.matcher(text)) : null }
             int lastMatchEnd = 0
 
             matchers.every { MapEntry<String, Matcher> v -> v.value.find() }
-            while (matchers && matchers.any { v -> v.value.find(lastMatchEnd)}) {
-                MapEntry<String, Matcher> matcherEntry = matchers.min { MapEntry<String, Matcher> v -> v.value.find(lastMatchEnd) ? v.value.start() : Integer.MAX_VALUE} ?: null
-                if(!matcherEntry){
+            while (matchers && matchers.any { v -> v.value.find(lastMatchEnd) }) {
+                MapEntry<String, Matcher> matcherEntry = matchers.min { MapEntry<String, Matcher> v -> v.value.find(lastMatchEnd) ? v.value.start() : Integer.MAX_VALUE } ?: null
+                if (!matcherEntry) {
                     continue;
                 }
                 Matcher matcher = matcherEntry.value
@@ -58,7 +59,7 @@ public class UISupport {
             }
             spansBuilder.add emptyList(), text.length() - lastMatchEnd
             spansBuilder.create()
-        }catch(any){
+        } catch (any) {
             //silent
         }
     }
