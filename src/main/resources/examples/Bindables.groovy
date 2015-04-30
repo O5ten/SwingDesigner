@@ -38,7 +38,7 @@ def main(){
 
 @Bindable
 class B{
-    int r = 127
-    int g = 127
-    int b = 127
+    int r
+    int g
+    int b
 }
