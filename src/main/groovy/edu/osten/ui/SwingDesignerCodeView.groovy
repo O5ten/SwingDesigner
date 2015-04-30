@@ -6,16 +6,14 @@ import edu.osten.engine.ScriptWriter
 import javafx.application.Application
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
-import javafx.embed.swing.SwingNode
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
-import javafx.geometry.Orientation
 import javafx.scene.Scene
 import javafx.scene.control.Button
 import javafx.scene.control.Control
-import javafx.scene.control.SplitPane
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
+import javafx.scene.control.ToggleButton
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
@@ -30,61 +28,81 @@ import javax.swing.JTextArea
 import java.awt.Color
 
 import static edu.osten.ui.UISupport.computeAllHighlighting
-import static javafx.application.Platform.*
-import static javafx.scene.control.TabPane.TabClosingPolicy.*
-import static javax.swing.SwingUtilities.*
+import static javafx.application.Platform.runLater
+import static javafx.scene.control.TabPane.TabClosingPolicy.UNAVAILABLE
+import static javax.swing.SwingUtilities.invokeLater
 
-class SwingDesignerView extends Application {
+class SwingDesignerCodeView extends Application {
 
     private GroovyCompiler groovyCompiler
     private ScriptWriter scriptWriter
     private CodeArea codeArea
     private JTextArea textArea = new JTextArea(lineWrap: true, wrapStyleWord: true)
+    private SwingDesignerResultView resultView
 
-    SwingDesignerView( ){
+    SwingDesignerCodeView() {
         this.groovyCompiler = new GroovyCompiler()
         this.scriptWriter = new ScriptWriter()
+        this.resultView = new SwingDesignerResultView()
     }
 
     @Override
     void start(Stage stage) throws Exception {
 
-        SwingNode swingNode = new SwingNode()
-        swingNode.content = new JLabel(text: 'No groovy code has been added yet')
+        AnchorPane topAnchorPane = new AnchorPane()
+
+        ToggleButton toggleButton = new ToggleButton(text: 'Show Result')
+
+        toggleButton.onAction = new EventHandler<ActionEvent>() {
+            @Override
+            void handle(ActionEvent event) {
+                if (resultView.isShowing()) {
+                    resultView.hide()
+                } else {
+                    resultView.show()
+                    runLater {
+                        resultView.swingNode.content.revalidate()
+                    }
+                }
+            }
+        }
 
         codeArea = new CodeArea()
         codeArea.replaceText ''
         codeArea.paragraphGraphicFactory = LineNumberFactory.get(codeArea)
 
-        AnchorPane leftPane = new AnchorPane()
-        AnchorPane.setTopAnchor swingNode, 0.0
-        AnchorPane.setLeftAnchor swingNode, 0.0
-        AnchorPane.setRightAnchor swingNode, 0.0
-        AnchorPane.setBottomAnchor swingNode, 0.0
-
         AnchorPane rightPane = new AnchorPane()
+
+        topAnchorPane.children.addAll codeArea, toggleButton
+
+        AnchorPane.setTopAnchor codeArea, 0.0
+        AnchorPane.setLeftAnchor codeArea, 0.0
+        AnchorPane.setRightAnchor codeArea, 0.0
+        AnchorPane.setBottomAnchor codeArea, 28.0
+
+        AnchorPane.setBottomAnchor toggleButton, 0.0
 
         TabPane tabPane = new TabPane()
         tabPane.tabClosingPolicy = UNAVAILABLE
 
         Tab codeTab = new Tab('Groovy Editor')
-        codeTab.content = codeArea
+        codeTab.content = topAnchorPane
 
         Tab exampleTab = new Tab('Examples')
         VBox exampleBox = new VBox()
         exampleBox.getStyleClass().add('example-box')
 
         List<Control> examples = Lists.newArrayList();
-        for(File example : new File('./target/classes/examples/').listFiles()){
+        for (File example : new File('./target/classes/examples/').listFiles()) {
             final String aPath = example.path
-            def button = new Button(example.name.replace('_',' ').split('\\.')[0]);
-            button.onAction = new EventHandler<ActionEvent>() {
+            def btn = new Button(example.name.replace('_', ' ').split('\\.')[0]);
+            btn.onAction = new EventHandler<ActionEvent>() {
                 @Override
                 void handle(ActionEvent actionEvent) {
                     setExample aPath
                 }
             }
-            examples.add button
+            examples.add btn
         }
         exampleBox.children.addAll examples
         exampleTab.content = exampleBox
@@ -96,25 +114,20 @@ class SwingDesignerView extends Application {
         AnchorPane.setBottomAnchor tabPane, 0.0
         AnchorPane.setLeftAnchor tabPane, 0.0
 
-        SplitPane split = new SplitPane()
-        split.getItems().addAll(leftPane, rightPane)
-        split.orientation = Orientation.HORIZONTAL
-
-        leftPane.children.add swingNode
         rightPane.children.add tabPane
 
         def inCaseOfErrorCallback = {
-            JPanel panel = new JPanel(new MigLayout('wrap','0[grow, fill]0','0[]0[grow,fill]push'))
-            panel.add new JLabel(text: 'Your groovy has trouble compiling').with{
+            JPanel panel = new JPanel(new MigLayout('wrap', '0[grow, fill]0', '0[]0[grow,fill]push'))
+            panel.add new JLabel(text: 'Your groovy has trouble compiling').with {
                 it.foreground = Color.RED
                 it
             }
             panel.add textArea
 
-            swingNode.content = panel
+            resultView.swingNode.content = panel
             invokeLater({
-                    panel.revalidate()
-                    panel.repaint()
+                panel.revalidate()
+                panel.repaint()
             })
         }
 
@@ -126,16 +139,16 @@ class SwingDesignerView extends Application {
                     def buildable = groovyCompiler.compile(file, inCaseOfErrorCallback)
                     runLater({
                         StyleSpans<Collection<String>> spans = computeAllHighlighting(newScript)
-                        if(spans) {
+                        if (spans) {
                             codeArea.setStyleSpans 0, computeAllHighlighting(newScript)
                         }
                         invokeLater({
-                            try{
+                            try {
                                 def component = buildable.main()
-                                swingNode.content = component
+                                resultView.swingNode.content = component
                                 component.revalidate()
                                 component.repaint()
-                            }catch(any){
+                            } catch (any) {
                                 textArea.text = any.message
                                 inCaseOfErrorCallback.call()
                             }
@@ -149,8 +162,8 @@ class SwingDesignerView extends Application {
                 }
             }
         })
-        Scene scene = new Scene(split, 800, 600)
-        scene.stylesheets.add SwingDesignerView.class.getResource('/style.css').toExternalForm()
+        Scene scene = new Scene(rightPane, 800, 600)
+        scene.stylesheets.add SwingDesignerCodeView.class.getResource('/style.css').toExternalForm()
         stage.scene = scene
         stage.title = 'Swing Designer'
         stage.show()
