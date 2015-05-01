@@ -1,5 +1,5 @@
 def main(){
-    new SwingBuilder().
+	new SwingBuilder().
         panel(layout: new MigLayout('wrap 50','0[grow,fill]0','0[grow,fill]0')){
 		50.times{ value -> 
 			panel( background: [value, 255-value, value]){

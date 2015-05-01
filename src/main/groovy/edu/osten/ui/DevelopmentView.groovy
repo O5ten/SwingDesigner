@@ -8,12 +8,9 @@ import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
+import javafx.scene.Parent
 import javafx.scene.Scene
-import javafx.scene.control.Button
-import javafx.scene.control.CheckBox
-import javafx.scene.control.Control
-import javafx.scene.control.Tab
-import javafx.scene.control.TabPane
+import javafx.scene.control.*
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
@@ -22,10 +19,9 @@ import org.fxmisc.richtext.CodeArea
 import org.fxmisc.richtext.LineNumberFactory
 import org.fxmisc.richtext.StyleSpans
 
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.JTextArea
-import java.awt.Color
+import javax.swing.*
+import java.awt.*
+import java.util.List
 
 import static edu.osten.ui.UISupport.computeAllHighlighting
 import static javafx.application.Platform.runLater
@@ -39,13 +35,13 @@ class DevelopmentView extends Application {
     private JTextArea textArea = new JTextArea(lineWrap: true, wrapStyleWord: true)
     private ResultView resultView
     private boolean isContinuousCompilationEnabled = true;
+    private boolean isGroovyFX = false
 
     DevelopmentView() {
         this.groovyCompiler = new GroovyCompiler()
         this.scriptWriter = new ScriptWriter()
         this.resultView = new ResultView()
         this.codeArea = new CodeArea()
-
     }
 
     @Override
@@ -84,12 +80,38 @@ class DevelopmentView extends Application {
             }
         })
 
+        ToggleGroup group = new ToggleGroup()
+        RadioButton isJavaFXCheckBox = new RadioButton(text: 'GroovyFX', toggleGroup: group, selected: isGroovyFX)
+        RadioButton isSwingBuilder = new RadioButton(text: 'SwingBuilder', toggleGroup: group, selected: !isGroovyFX)
+
+        isJavaFXCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                isGroovyFX = newValue
+                triggerCompilation(codeArea.textProperty().getValue())
+            }
+        })
+
+        showResultView.onAction = new EventHandler<ActionEvent>() {
+            @Override
+            void handle(ActionEvent event) {
+                if (resultView.isShowing()) {
+                    resultView.hide()
+                } else {
+                    resultView.show()
+                    runLater {
+                        resultView.swingNode.content.revalidate()
+                    }
+                }
+            }
+        }
+
         codeArea.replaceText ''
         codeArea.paragraphGraphicFactory = LineNumberFactory.get(codeArea)
 
         AnchorPane rightPane = new AnchorPane()
 
-        topAnchorPane.children.addAll codeArea, showResultView, continuousCompilationCheckBox
+        topAnchorPane.children.addAll codeArea, showResultView, continuousCompilationCheckBox, isJavaFXCheckBox, isSwingBuilder
 
         AnchorPane.setTopAnchor codeArea, 0.0
         AnchorPane.setLeftAnchor codeArea, 0.0
@@ -99,6 +121,12 @@ class DevelopmentView extends Application {
         AnchorPane.setBottomAnchor showResultView, 0.0
         AnchorPane.setBottomAnchor continuousCompilationCheckBox, 0.0
         AnchorPane.setLeftAnchor continuousCompilationCheckBox, 130.0
+
+        AnchorPane.setLeftAnchor isJavaFXCheckBox, 330.0
+        AnchorPane.setBottomAnchor isJavaFXCheckBox, 0
+
+        AnchorPane.setLeftAnchor isSwingBuilder, 430.0
+        AnchorPane.setBottomAnchor isSwingBuilder, 0
 
         TabPane tabPane = new TabPane()
         tabPane.tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
@@ -115,7 +143,7 @@ class DevelopmentView extends Application {
                 File example
                         : new File('./target/classes/examples/').listFiles()) {
             final String aPath = example.path
-            def btn = new Button(example.name.replace('_', ' ').split('\\.')[0]);
+            def btn = new javafx.scene.control.Button(example.name.replace('_', ' ').split('\\.')[0]);
             btn.onAction = new EventHandler<ActionEvent>() {
                 @Override
                 void handle(ActionEvent actionEvent) {
@@ -136,8 +164,6 @@ class DevelopmentView extends Application {
 
         rightPane.children.add tabPane
 
-
-
         codeArea.textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> arg0, String arg1, String newScript) {
@@ -147,7 +173,7 @@ class DevelopmentView extends Application {
         Scene scene = new Scene(rightPane, 800, 600)
         scene.stylesheets.add DevelopmentView.class.getResource('/style.css').toExternalForm()
         stage.scene = scene
-        stage.title = 'Swing Designer'
+        stage.title = 'Groovy Interface Sandbox'
         stage.show()
     }
 
@@ -160,6 +186,7 @@ class DevelopmentView extends Application {
         panel.add textArea
 
         resultView.swingNode.content = panel
+        resultView.showSwing()
         invokeLater({
             panel.revalidate()
             panel.repaint()
@@ -177,23 +204,37 @@ class DevelopmentView extends Application {
             }
             if (isContinuousCompilationEnabled) {
                 def buildable = groovyCompiler.compile(file, inCaseOfErrorCallback)
-                runLater({
-                    invokeLater({
+                if (isGroovyFX) {
+                    runLater {
+                        try {
+                            def component = buildable.main()
+                            Parent root = component.scene.root
+                            resultView.javaFXNode.children.clear()
+                            resultView.javaFXNode.children.add root
+                            resultView.showJavaFX()
+                        } catch (any) {
+                            textArea.text = any.message + '\n\n' + any.stackTrace.toArrayString()
+                            inCaseOfErrorCallback.call()
+                        }
+                    }
+                } else {
+                    invokeLater {
                         try {
                             def component = buildable.main()
                             resultView.swingNode.content.removeAll()
                             resultView.swingNode.content = component
+                            resultView.showSwing()
                             component.revalidate()
                             component.repaint()
                         } catch (any) {
-                            textArea.text = any.message
+                            textArea.text = any.message + '\n\n' + any.stackTrace.toArrayString()
                             inCaseOfErrorCallback.call()
                         }
-                    })
-                })
+                    }
+                }
             }
         } catch (any) {
-            textArea.text = any.message
+            textArea.text = any.message + '\n\n' + any.stackTrace.toArrayString()
             inCaseOfErrorCallback.call()
             return
         }
@@ -205,6 +246,7 @@ class DevelopmentView extends Application {
             code += it + '\n'
         };
         codeArea.replaceText code
+        triggerCompilation(code)
     }
 
 }

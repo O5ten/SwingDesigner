@@ -3,4 +3,6 @@ import groovy.swing.*
 import net.miginfocom.swing.MigLayout
 import javax.swing.*
 import java.awt.*
-import static java.awt.Color.*
+
+import groovyx.javafx.SceneGraphBuilder
+
