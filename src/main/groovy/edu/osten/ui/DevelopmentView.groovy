@@ -40,7 +40,6 @@ class DevelopmentView extends Application {
     private ResultView resultView
     private boolean isContinuousCompilationEnabled = true;
 
-
     DevelopmentView() {
         this.groovyCompiler = new GroovyCompiler()
         this.scriptWriter = new ScriptWriter()
@@ -99,7 +98,7 @@ class DevelopmentView extends Application {
 
         AnchorPane.setBottomAnchor showResultView, 0.0
         AnchorPane.setBottomAnchor continuousCompilationCheckBox, 0.0
-        AnchorPane.setLeftAnchor continuousCompilationCheckBox, 140.0
+        AnchorPane.setLeftAnchor continuousCompilationCheckBox, 130.0
 
         TabPane tabPane = new TabPane()
         tabPane.tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
@@ -169,17 +168,20 @@ class DevelopmentView extends Application {
 
     private void triggerCompilation(String newScript) {
         try {
+            File file = scriptWriter.write(newScript)
+            runLater {
+                StyleSpans<Collection<String>> spans = computeAllHighlighting(newScript)
+                if (spans) {
+                    codeArea.setStyleSpans 0, computeAllHighlighting(newScript)
+                }
+            }
             if (isContinuousCompilationEnabled) {
-                File file = scriptWriter.write(newScript)
                 def buildable = groovyCompiler.compile(file, inCaseOfErrorCallback)
                 runLater({
-                    StyleSpans<Collection<String>> spans = computeAllHighlighting(newScript)
-                    if (spans) {
-                        codeArea.setStyleSpans 0, computeAllHighlighting(newScript)
-                    }
                     invokeLater({
                         try {
                             def component = buildable.main()
+                            resultView.swingNode.content.removeAll()
                             resultView.swingNode.content = component
                             component.revalidate()
                             component.repaint()
