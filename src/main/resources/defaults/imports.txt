@@ -1,8 +1,9 @@
 import groovy.beans.Bindable
 import groovy.swing.*
 import net.miginfocom.swing.MigLayout
+import org.tbee.javafx.scene.layout.MigPane
 import javax.swing.*
 import java.awt.*
-
 import groovyx.javafx.SceneGraphBuilder
-
+import groovyx.javafx.beans.*
+import groovy.transform.*

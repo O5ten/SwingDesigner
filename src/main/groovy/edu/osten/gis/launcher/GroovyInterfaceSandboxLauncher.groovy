@@ -1,9 +1,9 @@
-package edu.osten.launcher
+package edu.osten.gis.launcher
 
-import edu.osten.ui.DevelopmentView
+import edu.osten.gis.ui.DevelopmentView
 import javafx.application.Application
 
-public class SwingDesignerLauncher {
+public class GroovyInterfaceSandboxLauncher {
     public static void main(String[] args) {
         Application.launch(DevelopmentView.class, args);
     }

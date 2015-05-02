@@ -1,4 +1,4 @@
-package edu.osten.engine
+package edu.osten.gis.engine
 
 class GroovyCompiler {
 

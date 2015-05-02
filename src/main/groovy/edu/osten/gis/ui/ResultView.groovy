@@ -1,4 +1,5 @@
-package edu.osten.ui
+package edu.osten.gis.ui
+
 
 import javafx.embed.swing.SwingNode
 import javafx.scene.Parent
@@ -35,7 +36,7 @@ class ResultView extends Stage {
         Scene scene = new Scene(mainPanel, 800, 600)
         scene.stylesheets.add ResultView.class.getResource('/style.css').toExternalForm()
         this.scene = scene
-        this.title = 'Swing Designer'
+        this.title = 'Result Viewer'
     }
 
     SwingNode getSwingNode() {

@@ -1,12 +1,10 @@
-package edu.osten.ui
+package edu.osten.gis.ui
 
 import com.google.common.collect.Lists
-import edu.osten.engine.GroovyCompiler
-import edu.osten.engine.ScriptWriter
+import edu.osten.gis.engine.GroovyCompiler
+import edu.osten.gis.engine.ScriptWriter
 import javafx.application.Application
 import javafx.beans.value.ChangeListener
-import javafx.beans.value.ObservableValue
-import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.scene.Parent
 import javafx.scene.Scene
@@ -18,12 +16,13 @@ import net.miginfocom.swing.MigLayout
 import org.fxmisc.richtext.CodeArea
 import org.fxmisc.richtext.LineNumberFactory
 import org.fxmisc.richtext.StyleSpans
+import org.tbee.javafx.scene.layout.MigPane
 
 import javax.swing.*
 import java.awt.*
 import java.util.List
 
-import static edu.osten.ui.UISupport.computeAllHighlighting
+import static edu.osten.gis.ui.UISupport.computeAllHighlighting
 import static javafx.application.Platform.runLater
 import static javax.swing.SwingUtilities.invokeLater
 
@@ -51,67 +50,46 @@ class DevelopmentView extends Application {
 
         CheckBox showResultView = new CheckBox(text: 'Show Result')
 
-        showResultView.onAction = new EventHandler<ActionEvent>() {
-            @Override
-            void handle(ActionEvent event) {
-                if (resultView.isShowing()) {
-                    resultView.hide()
-                } else {
-                    resultView.show()
-                    runLater {
-                        resultView.swingNode.content.revalidate()
-                    }
+        showResultView.onAction = [handle: { event ->
+            if (resultView.isShowing()) {
+                resultView.hide()
+            } else {
+                resultView.show()
+                runLater {
+                    resultView.swingNode.content.revalidate()
                 }
             }
-        }
-        resultView.showingProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                showResultView.selectedProperty().set(newValue)
-            }
-        })
+        }] as EventHandler
+
+        resultView.showingProperty().addListener([changed: { observable, oldValue, newValue ->
+            showResultView.selectedProperty().set(newValue)
+        }] as ChangeListener)
 
         CheckBox continuousCompilationCheckBox = new CheckBox(text: 'Continuous Compilation', selected: true)
-        continuousCompilationCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+
+        continuousCompilationCheckBox.selectedProperty().addListener([changed: {
+            observable, oldValue, newValue ->
                 isContinuousCompilationEnabled = newValue
                 triggerCompilation(codeArea.textProperty().getValue())
-            }
-        })
+        }] as ChangeListener)
 
         ToggleGroup group = new ToggleGroup()
         RadioButton isJavaFXCheckBox = new RadioButton(text: 'GroovyFX', toggleGroup: group, selected: isGroovyFX)
         RadioButton isSwingBuilder = new RadioButton(text: 'SwingBuilder', toggleGroup: group, selected: !isGroovyFX)
 
-        isJavaFXCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                isGroovyFX = newValue
-                triggerCompilation(codeArea.textProperty().getValue())
-            }
-        })
+        isJavaFXCheckBox.selectedProperty().addListener([changed: { observable, oldValue, newValue ->
+            isGroovyFX = newValue
+            triggerCompilation(codeArea.textProperty().getValue())
+        }] as ChangeListener)
 
-        showResultView.onAction = new EventHandler<ActionEvent>() {
-            @Override
-            void handle(ActionEvent event) {
-                if (resultView.isShowing()) {
-                    resultView.hide()
-                } else {
-                    resultView.show()
-                    runLater {
-                        resultView.swingNode.content.revalidate()
-                    }
-                }
-            }
-        }
 
         codeArea.replaceText ''
         codeArea.paragraphGraphicFactory = LineNumberFactory.get(codeArea)
 
         AnchorPane rightPane = new AnchorPane()
 
-        topAnchorPane.children.addAll codeArea, showResultView, continuousCompilationCheckBox, isJavaFXCheckBox, isSwingBuilder
+        topAnchorPane.children.addAll codeArea, showResultView, continuousCompilationCheckBox, isJavaFXCheckBox,
+                isSwingBuilder
 
         AnchorPane.setTopAnchor codeArea, 0.0
         AnchorPane.setLeftAnchor codeArea, 0.0
@@ -139,17 +117,10 @@ class DevelopmentView extends Application {
         exampleBox.getStyleClass().add('example-box')
 
         List<Control> examples = Lists.newArrayList();
-        for (
-                File example
-                        : new File('./target/classes/examples/').listFiles()) {
+        for (File example : new File('./target/classes/examples/').listFiles()) {
             final String aPath = example.path
             def btn = new javafx.scene.control.Button(example.name.replace('_', ' ').split('\\.')[0]);
-            btn.onAction = new EventHandler<ActionEvent>() {
-                @Override
-                void handle(ActionEvent actionEvent) {
-                    setExample aPath
-                }
-            }
+            btn.onAction = [handle: { actionEvent -> setExample aPath }] as EventHandler
             examples.add btn
         }
         exampleBox.children.addAll examples
@@ -164,12 +135,8 @@ class DevelopmentView extends Application {
 
         rightPane.children.add tabPane
 
-        codeArea.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> arg0, String arg1, String newScript) {
-                triggerCompilation(newScript)
-            }
-        })
+        codeArea.textProperty().addListener([changed: { obvservable, oldValue, newValue -> triggerCompilation(newValue) }] as ChangeListener)
+
         Scene scene = new Scene(rightPane, 800, 600)
         scene.stylesheets.add DevelopmentView.class.getResource('/style.css').toExternalForm()
         stage.scene = scene
@@ -233,6 +200,7 @@ class DevelopmentView extends Application {
                     }
                 }
             }
+            MigPane
         } catch (any) {
             textArea.text = any.message + '\n\n' + any.stackTrace.toArrayString()
             inCaseOfErrorCallback.call()
@@ -248,5 +216,4 @@ class DevelopmentView extends Application {
         codeArea.replaceText code
         triggerCompilation(code)
     }
-
 }

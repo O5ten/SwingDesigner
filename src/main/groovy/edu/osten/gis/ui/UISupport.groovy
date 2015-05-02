@@ -1,4 +1,4 @@
-package edu.osten.ui
+package edu.osten.gis.ui
 
 import org.fxmisc.richtext.StyleSpans
 import org.fxmisc.richtext.StyleSpansBuilder
@@ -41,13 +41,13 @@ public class UISupport {
 
     static StyleSpans<Collection<String>> computeHighlighting(Map<String, Pattern> patterns, String text) {
         try {
-            StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>()
-            List<MapEntry<String, Matcher>> matchers = patterns.collect() { String k, Pattern p -> return p.matcher(text).find() ? new MapEntry(k, p.matcher(text)) : null }
+            StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<Collection<String>>()
+            List<MapEntry> matchers = patterns.collect() { String k, Pattern p -> return p.matcher(text).find() ? new MapEntry(k, p.matcher(text)) : null }
             int lastMatchEnd = 0
 
-            matchers.every { MapEntry<String, Matcher> v -> v.value.find() }
+            matchers.every { MapEntry v -> v.value.find() }
             while (matchers && matchers.any { v -> v.value.find(lastMatchEnd) }) {
-                MapEntry<String, Matcher> matcherEntry = matchers.min { MapEntry<String, Matcher> v -> v.value.find(lastMatchEnd) ? v.value.start() : Integer.MAX_VALUE } ?: null
+                MapEntry matcherEntry = matchers.min { MapEntry v -> v.value.find(lastMatchEnd) ? v.value.start() : Integer.MAX_VALUE } ?: null
                 if (!matcherEntry) {
                     continue;
                 }

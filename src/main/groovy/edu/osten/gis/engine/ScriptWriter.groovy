@@ -1,8 +1,6 @@
-package edu.osten.engine;
+package edu.osten.gis.engine;
 
-import com.google.common.io.Files;
-
-import java.io.File;
+import com.google.common.io.Files
 
 import static com.google.common.base.Charsets.UTF_8;
 
