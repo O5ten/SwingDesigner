@@ -5,19 +5,28 @@ A simple tool to test out new groovy SwingBuilder layouts with MigLayout and see
 Useful for testing out experimental components or new layouts since Java or Groovy classes may be entered and built directly in the editor. 
 
 ###Resources
-- [Screenshot](http://05ten.se/pictures/swingbuilder-tester.png)
-- [SwingBuilder Documentation](http://groovy.codehaus.org/Swing+Builder) 
-- [Miglayout Documentation](http://www.miglayout.com/)
+- [SwingBuilder Documentation](http://groovy.codehaus.org/Swing+Builder)
+- [MigLayout Documentation](http://www.miglayout.com/)
+- [GroovyFX Documentation](http://groovyfx.org/docs/index.html)
+- MigPane
 
-###0.4 
-- Refactored for separation of concerns.  
-- Made the main panel into a splitpane that can be modified by user.
-- Made an additional example-pane at the code-area to import examples easily. 
-- Made executable jar and startup-scripts to easier start the app. 
+###0.8
+- Added support for GroovyFX, and added some nice examples to show off its features.
 
 ###Requirements
-To run this app you need a Java 8 Runtime Environment.   
-Find one for your operation system [Here](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)
-###Download: 
-- [SwingBuilder 0.4 tar.gz](https://www.dropbox.com/s/1gtk8qucbdaub1u/SwingDesigner.tar.gz)
-- [SwingBuilder 0.4 zip](https://www.dropbox.com/s/3z8ogfy49edy31s/SwingDesigner.zip)
+This app requires Java8, because reasons.
+This app also requires Maven3 to build.
+
+###Build
+mvn clean install
+
+###Run
+java -jar target/GroovyInterfaceDesigner.jar
+
+or use the shellscripts
+
+####*NIX:
+gid.sh
+
+####Windows
+gis.bat
